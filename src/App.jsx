@@ -12,27 +12,27 @@ function Square ({ value, onSquareClick }) {
   </button>
   )}
 
-export default function Board() {
-  const [squares, setSquares] = useState(Array(9).fill(null))
+function Board({ onPlay, currentPlayer, squares}) {
+  // const [squares, setSquares] = useState(Array(9).fill(null))
 
-  const player1 = "X"
-  const player2 = "O"
-  const [currentPlayer, setCurrentPlayer] = useState(
-    (Math.random()) < 0.5 
-    ? player1 
-    : player2)
+  // const player1 = "X"
+  // const player2 = "O"
+  // const [currentPlayer, setCurrentPlayer] = useState(
+  //   (Math.random()) < 0.5 
+  //   ? player1 
+  //   : player2)
 
 
   function handleClick (i) {
-    if (squares[i] || calculateWinner(squares)) {
+    if (calculateWinner(squares) || squares[i]) {
       return
     }
     const nextSquares = squares.slice();
+
     nextSquares[i] = currentPlayer;
-    setSquares(nextSquares)
-    currentPlayer === player1 
-    ? setCurrentPlayer(player2) 
-    : setCurrentPlayer(player1)
+    onPlay(nextSquares)
+    // setSquares(nextSquares)
+
   }
 
   const winner = calculateWinner(squares);
@@ -63,6 +63,60 @@ export default function Board() {
       </div>
     </>
   );
+}
+
+export default function Game() {
+  // const [squares, setSquares] = useState(Array(9).fill(null))
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [currentMove, setCurrentMove] = useState(0)
+  const currentSquares = history[currentMove]
+  
+  const player1 = "X"
+  const player2 = "O"
+  const startingPlayer = (Math.random()) < 0.5 ? player1 : player2
+  const [currentPlayer, setCurrentPlayer] = useState(startingPlayer)
+
+  function handlePlay(nextSquares) {
+    // todo
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares]
+    setHistory(nextHistory)
+    setCurrentMove(nextHistory.length - 1);
+    currentPlayer === player1 
+    ? setCurrentPlayer(player2) 
+    : setCurrentPlayer(player1)
+  }
+
+  function jumpTo(nextMove){
+    setCurrentMove(nextMove);
+    setCurrentPlayer(nextMove % 2 === 0 ? player1 : player2)
+  }
+
+  const moves = history.map((squares, index) => {
+    let description;
+    if (index > 0) {
+      description = 'Go to move #' + index;
+    } else {
+      description = 'Go to game start';
+    }
+    return (
+      <li key={index}>
+        <button onClick={() => jumpTo(index)}>{description}</button>
+      </li>
+    );
+  });
+
+  // console.log(moves)
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board onPlay={handlePlay} currentPlayer={currentPlayer} squares={currentSquares}/>
+      </div>
+      <div className="game-info">
+        <ol>{moves}</ol>
+      </div>
+    </div>
+  ) 
 }
 
 function calculateWinner(squares) {
